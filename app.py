@@ -33,7 +33,13 @@ elif mode == "Text Input":
     if t: df = pd.DataFrame({"Content": [t]})
 
 if df is not None:
-    col = st.selectbox("Select Column", df.columns)
+    # PDF나 텍스트 모드일 때는 자동으로 Content를 선택하고 안내함
+    if mode == "CSV Upload":
+        col = st.selectbox("Select Column", df.columns)
+    else:
+        col = "Content"
+        st.info(f"Analysis will be performed on the '{col}' column.")
+
     if st.button("Run Analysis"):
         freq, corr_df, word_df = run_quantitative_analysis(df, col)
         
