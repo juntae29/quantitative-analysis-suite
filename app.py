@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt  # 이 부분이 누락되면 NameError가 발생한다
+import matplotlib.pyplot as plt
 from pypdf import PdfReader
 import openpyxl
 from analyzer import run_analysis, set_font, generate_wordcloud
@@ -57,7 +57,6 @@ if st.session_state.data is not None and st.session_state.column:
             st.table(result_df)
             st.subheader("Frequency Visualization")
             
-            # Matplotlib 객체 생성
             fig, ax = plt.subplots()
             wc = generate_wordcloud(token_counts)
             ax.imshow(wc, interpolation='bilinear')
