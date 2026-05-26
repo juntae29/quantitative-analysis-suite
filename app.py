@@ -12,14 +12,18 @@ with st.sidebar:
     
     input_mode = st.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
     
-    # Initialize session state variables
     if "df" not in st.session_state:
         st.session_state.df = None
     
     if input_mode == "CSV Upload":
         uploaded = st.file_uploader("Upload CSV", type=["csv"])
         if uploaded:
-            st.session_state.df = pd.read_csv(uploaded)
+            # Handle encoding issues
+            try:
+                st.session_state.df = pd.read_csv(uploaded, encoding='utf-8')
+            except:
+                st.session_state.df = pd.read_csv(uploaded, encoding='cp949')
+            
             text_cols = st.session_state.df.select_dtypes(include=['object']).columns.tolist()
             if text_cols:
                 st.session_state.selected_col = st.selectbox("Select Text Column", text_cols)
@@ -46,12 +50,11 @@ st.title("Data Mining Analyzer")
 if st.session_state.df is not None and "selected_col" in st.session_state:
     if st.button("Run Analysis", type="primary"):
         set_font()
-        # Ensure latest data and column are passed
         _, _, result_df, _ = run_analysis(st.session_state.df, st.session_state.selected_col)
         
         if result_df is not None and not result_df.empty:
-            st.table(result_df.sort_values('Score', ascending=False).head(20))
+            st.table(result_df)
         else:
-            st.error("Analysis failed. No valid nouns or adjectives detected.")
+            st.error("No valid tokens found. Please check if the data contains Korean text.")
 else:
-    st.info("Please complete the sidebar setup.")
+    st.info("Please provide input in the sidebar.")
