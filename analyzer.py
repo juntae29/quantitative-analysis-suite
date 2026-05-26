@@ -3,8 +3,10 @@ from collections import Counter
 import re
 from wordcloud import WordCloud
 
-def process_dataframe_mining(df):
-    text_data = " ".join(df['Abstract'].astype(str)).lower()
+def process_dataframe_mining(df, column_name):
+    # 선택한 컬럼이 없으면 첫 번째 컬럼을 자동으로 사용
+    target_col = column_name if column_name in df.columns else df.columns[0]
+    text_data = " ".join(df[target_col].astype(str)).lower()
     words = re.findall(r'\w+', text_data)
     word_counts = Counter(words)
     word_df = pd.DataFrame(word_counts.items(), columns=['Word', 'Count'])
