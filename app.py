@@ -7,27 +7,28 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
-# Title and persistent instruction guide
-st.title("Data Mining Analyzer")
-
-# Instruction block is placed outside of conditional logic to ensure it is always rendered
-st.markdown("---")
-st.markdown("### 💡 User Guide")
-st.markdown("1. Select the input method from the left sidebar.")
-st.markdown("2. Upload your file or input text in the designated area.")
-st.markdown("3. Click 'Run Analysis' to generate insights.")
-st.markdown("---")
+# Force rendering of Title and Guide as a single HTML block
+st.markdown("""
+<div style="padding-bottom: 20px;">
+    <h1 style="margin-bottom: 0px;">Data Mining Analyzer</h1>
+    <hr style="margin: 10px 0;">
+    <h3 style="margin-top: 0px;">💡 User Guide</h3>
+    <p>1. Select the input method from the left sidebar.</p>
+    <p>2. Upload your file or input text in the designated area.</p>
+    <p>3. Click <b>'Run Analysis'</b> to generate insights.</p>
+    <hr style="margin: 10px 0;">
+</div>
+""", unsafe_allow_html=True)
 
 set_matplotlib_font()
 
 # Sidebar
 input_mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
 
-# Variables to store data
 data_frame = None
 target_column = None
 
-# Input processing
+# Input Logic
 if input_mode == "CSV Upload":
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
     if uploaded_file: 
@@ -43,13 +44,12 @@ elif input_mode == "PDF Document":
         target_column = "Content"
 
 elif input_mode == "Text Input":
-    # Text area is always visible
     user_text = st.text_area("Input text for analysis", placeholder="Paste your text here.", height=150)
     if user_text: 
         data_frame = pd.DataFrame({"Content": [user_text]})
         target_column = "Content"
 
-# Analysis execution
+# Execution Logic
 if data_frame is not None:
     if input_mode != "CSV Upload":
         st.write(f"**Target Column:** '{target_column}'")
