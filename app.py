@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from scraper import run_web_scraper, scrape_text_from_url
+from scraper import scrape_text_from_url
 from analyzer import process_dataframe_mining, generate_wordcloud_obj
 from pypdf import PdfReader
 
@@ -9,7 +9,7 @@ st.title("Data Mining Analyzer")
 
 with st.sidebar:
     st.header("Configuration")
-    mode = st.selectbox("Select Mode", ["CSV Upload", "PDF Document", "Custom Text Input", "Web URL", "arXiv Search"])
+    mode = st.selectbox("Select Mode", ["CSV Upload", "PDF Document", "Custom Text Input", "Web URL"])
     
     df = None
     
@@ -35,16 +35,6 @@ with st.sidebar:
             text = scrape_text_from_url(u)
             if text: df = pd.DataFrame({"Abstract": [text]})
             else: st.error("Fetch failed.")
-
-    elif mode == "arXiv Search":
-        keyword = st.text_input("Query", value='Artificial Intelligence')
-        num = st.slider("Results", 10, 100, 30)
-        if st.button("Search"):
-            with st.spinner("Searching..."):
-                if run_web_scraper(keyword, num):
-                    df = pd.read_csv("scraped_data.csv")
-                else:
-                    st.error("Search failed.")
 
 if df is not None and not df.empty:
     st.success("Ready")
