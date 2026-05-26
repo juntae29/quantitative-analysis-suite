@@ -1,20 +1,20 @@
 import streamlit as st
 import pandas as pd
-from scraper import run_web_scraper
+from scraper import run_web_scraper, scrape_text_from_url
 from analyzer import process_dataframe_mining, generate_wordcloud_obj
 from pypdf import PdfReader
 
 st.set_page_config(page_title="Multi-Source Text Data Mining Analyzer", layout="wide", page_icon="🌐")
 
 st.title("🌐 Multi-Source Text Data Mining Analyzer")
-st.caption("Advanced text mining from academic web sources, PDF documents, and custom text inputs.")
+st.caption("Advanced text mining from academic web sources, PDF documents, URL content, and custom inputs.")
 st.markdown("---")
 
 with st.sidebar:
     st.header("⚙️ Global Control Panel")
     analysis_mode = st.selectbox(
         "Select Analysis Mode", 
-        ["arXiv Web Scraping", "PDF Document Analysis", "Custom Text Input"]
+        ["arXiv Web Scraping", "PDF Document Analysis", "Custom Text Input", "Web URL Analysis"]
     )
     
     # 모드별 동적 UI
@@ -28,6 +28,11 @@ with st.sidebar:
         uploaded_file = st.file_uploader("Upload PDF file", type=["pdf"])
         launch_btn = st.button("Analyze PDF")
         mode_data = {"type": "pdf", "file": uploaded_file}
+        
+    elif analysis_mode == "Web URL Analysis":
+        url_input = st.text_input("Enter Website URL")
+        launch_btn = st.button("Analyze URL")
+        mode_data = {"type": "url", "url": url_input}
         
     else: # Custom Text Input
         custom_text = st.text_area("Paste your text here for analysis", height=200)
@@ -46,6 +51,13 @@ if launch_btn:
             reader = PdfReader(mode_data["file"])
             text = "".join([page.extract_text() for page in reader.pages])
             df = pd.DataFrame({"Abstract": [text]})
+            
+        elif mode_data["type"] == "url" and mode_data["url"]:
+            text = scrape_text_from_url(mode_data["url"])
+            if text:
+                df = pd.DataFrame({"Abstract": [text]})
+            else:
+                st.error("Failed to extract text from URL.")
             
         elif mode_data["type"] == "text" and mode_data["content"]:
             df = pd.DataFrame({"Abstract": [mode_data["content"]]})

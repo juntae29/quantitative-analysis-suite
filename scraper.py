@@ -5,6 +5,9 @@ import time
 import re
 
 def run_web_scraper(search_query="Artificial Intelligence", num_papers=30):
+    """
+    arXiv 웹사이트에서 논문 정보를 수집하는 함수
+    """
     print(f"[System] Starting data scraping for: {search_query}")
     
     extracted_records = []
@@ -41,3 +44,28 @@ def run_web_scraper(search_query="Artificial Intelligence", num_papers=30):
     pd.DataFrame(extracted_records).to_csv("scraped_data.csv", index=False, encoding="utf-8-sig")
     print(f"[Success] {len(extracted_records)} records saved.")
     return True
+
+def scrape_text_from_url(url):
+    """
+    사용자가 입력한 URL의 텍스트를 추출하는 함수
+    """
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return None
+            
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # 불필요한 태그 제거 (스크립트, 스타일, 네비게이션 등)
+        for element in soup(["script", "style", "nav", "footer", "header", "noscript"]):
+            element.extract()
+            
+        # 텍스트 추출
+        text = soup.get_text(separator=' ')
+        # 공백 정리
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+    except Exception as e:
+        print(f"[Error] Failed to scrape {url}: {e}")
+        return None
