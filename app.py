@@ -7,25 +7,26 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
+# 1. 사이드바 구성
+mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
+
+# 2. 메인 화면 구성
 st.title("Data Mining Analyzer")
 
-# 1. 상단 영역: 안내 문구 고정 (입력 유무와 관계없이 항상 표시)
-with st.container():
-    st.markdown("---")
-    st.markdown("### 💡 이용 안내")
-    st.markdown("1. 왼쪽 사이드바에서 데이터 입력 방식을 선택하시오.")
-    st.markdown("2. 데이터를 업로드하거나, 아래 입력 상자에 분석할 문장을 입력하시오.")
-    st.markdown("3. **'Run Analysis'** 버튼을 클릭하면 분석 결과가 나타난다.")
-    st.markdown("---")
+# 데이터 입력 전에도 무조건 노출되는 안내 문구 (st.markdown을 최상단에 배치)
+st.markdown("---")
+st.write("### 💡 이용 안내")
+st.write("1. 왼쪽 사이드바에서 데이터 입력 방식을 선택하십시오.")
+st.write("2. 데이터를 업로드하거나, 아래 입력 상자에 분석할 문장을 입력하십시오.")
+st.write("3. 'Run Analysis' 버튼을 클릭하면 분석 결과가 나타납니다.")
+st.markdown("---")
 
-# 2. 하단 영역: 입력 및 분석 실행
 set_matplotlib_font()
 
-mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
 df = None
 col = None
 
-# 모드별 입력 처리
+# 모드별 입력창
 if mode == "CSV Upload":
     f = st.file_uploader("Upload CSV", type=["csv"])
     if f: 
@@ -39,12 +40,12 @@ elif mode == "PDF Document":
         df = pd.DataFrame({"Content": [text]})
         col = "Content"
 elif mode == "Text Input":
-    t = st.text_area("분석할 문장 입력", placeholder="분석할 문장을 이곳에 붙여넣으시오.", height=150)
+    t = st.text_area("분석할 문장 입력", placeholder="여기에 분석할 문장을 붙여넣으십시오.", height=150)
     if t: 
         df = pd.DataFrame({"Content": [t]})
         col = "Content"
 
-# 분석 실행 버튼: df가 준비된 경우에만 실행
+# 분석 실행부
 if df is not None:
     if mode != "CSV Upload":
         st.write(f"**Target Column:** '{col}'")
