@@ -1,6 +1,6 @@
 import pandas as pd
 from collections import Counter
-from konlpy.tag import Okt
+from kiwipiepy import Kiwi # Java 의존성이 없는 분석기
 import matplotlib.pyplot as plt
 
 def set_font():
@@ -16,14 +16,14 @@ def run_analysis(df, column_name):
     if not text.strip():
         return None, None, None, None
     
-    # Okt 객체 생성 후 명사와 형용사 추출
-    okt = Okt()
-    tokens = [word for word, pos in okt.pos(text) if pos in ['Noun', 'Adjective']]
+    # Kiwi 분석기 초기화 및 명사/형용사 추출
+    kiwi = Kiwi()
+    tokens = [token.form for token in kiwi.analyze(text)[0][0] if token.tag in ['NNG', 'NNP', 'VA']]
     
     if not tokens:
         return None, None, None, None
     
-    # 직접 빈도 계산
+    # 빈도 계산
     counts = Counter(tokens)
     result_df = pd.DataFrame(counts.items(), columns=['Word', 'Score'])
     
