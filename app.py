@@ -7,28 +7,26 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
-# Force rendering of Title and Guide as a single HTML block
-st.markdown("""
-<div style="padding-bottom: 20px;">
-    <h1 style="margin-bottom: 0px;">Data Mining Analyzer</h1>
-    <hr style="margin: 10px 0;">
-    <h3 style="margin-top: 0px;">💡 User Guide</h3>
-    <p>1. Select the input method from the left sidebar.</p>
-    <p>2. Upload your file or input text in the designated area.</p>
-    <p>3. Click <b>'Run Analysis'</b> to generate insights.</p>
-    <hr style="margin: 10px 0;">
-</div>
-""", unsafe_allow_html=True)
+# Sidebar instruction section: This ensures the guide is always visible regardless of main content
+st.sidebar.title("💡 Instructions")
+st.sidebar.markdown("""
+1. Select your input method (CSV, PDF, or Text).
+2. Upload file or input text in the main area.
+3. Click 'Run Analysis' to see the results.
+""")
+st.sidebar.markdown("---")
+
+# Main content
+st.title("Data Mining Analyzer")
 
 set_matplotlib_font()
 
-# Sidebar
 input_mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
 
 data_frame = None
 target_column = None
 
-# Input Logic
+# Input processing
 if input_mode == "CSV Upload":
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
     if uploaded_file: 
