@@ -7,29 +7,27 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
-# 1. 안내 문구는 사이드바로 완전히 이동하여 레이아웃 간섭 제거
+# 1. 사이드바: 입력 제어 및 안내
 with st.sidebar:
     st.title("💡 User Guide")
-    st.markdown("""
-    1. Select input method.
-    2. Input/Upload data in the main section.
-    3. Click 'Run Analysis' to see results.
-    """)
+    st.markdown("1. Select source. 2. Input/Upload. 3. Analyze.")
     st.markdown("---")
     input_mode = st.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
 
-# 2. 메인 화면을 상단(제목)과 하단(분석 영역)으로 분리 (Colums 사용)
+# 2. 메인 영역 분리 (제목 전용 영역과 입력 전용 영역)
+# 제목 고정
 st.title("Data Mining Analyzer")
 st.markdown("---")
 
-# 3. 분석을 위한 메인 컨테이너 고정
-main_container = st.container()
+# 입력창이 제목을 밀어내지 않도록 공간 점유 방식 변경
+# 빈 공간(Empty)을 사용해 영역을 미리 확보함
+input_area = st.empty()
+analysis_area = st.container()
 
-with main_container:
+with input_area:
     data_frame = None
     target_column = None
 
-    # 입력 위젯 배치
     if input_mode == "Text Input":
         user_text = st.text_area("Input text for analysis", placeholder="Paste your text here.", height=150)
         if user_text: 
@@ -48,17 +46,17 @@ with main_container:
             data_frame = pd.DataFrame({"Content": [text_content]})
             target_column = "Content"
 
-    # 4. 분석 실행 및 결과 섹션 분리
-    st.markdown("---")
+# 3. 분석 결과 영역
+with analysis_area:
     set_matplotlib_font()
     if data_frame is not None:
+        st.markdown("---")
         if input_mode != "CSV Upload":
             st.write(f"**Target Column:** '{target_column}'")
         
         if st.button("Run Analysis", type="primary"):
             frequency, correlation_df, word_score_df, graph = run_quantitative_analysis(data_frame, target_column)
             
-            # 결과 섹션: Tab을 사용하여 시각적 분리
             tabs = st.tabs(["Dashboard (WordCloud)", "Keyword List", "Co-occurrence Network"])
             
             with tabs[0]:
