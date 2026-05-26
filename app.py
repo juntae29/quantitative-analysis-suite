@@ -4,9 +4,18 @@ from pypdf import PdfReader
 from analyzer import run_quantitative_analysis, generate_wordcloud
 
 st.set_page_config(layout="wide")
+
+st.markdown("""
+    <style>
+    button[data-baseweb="tab"] {
+        font-size: 20px !important;
+        font-weight: bold !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 st.title("Data Mining Analyzer")
 
-# 1. 사이드바 입력 설정
 mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Text Input"])
 df = None
 
@@ -23,24 +32,22 @@ elif mode == "Text Input":
     t = st.text_area("Paste Text")
     if t: df = pd.DataFrame({"Content": [t]})
 
-# 2. 분석 실행 및 결과 대시보드
 if df is not None:
     col = st.selectbox("Select Column", df.columns)
     if st.button("Run Analysis"):
         freq, corr_df, word_df = run_quantitative_analysis(df, col)
         
-        # 탭 변수 정의
-        tab1_title = '<span style="font-size: 20px; font-weight: bold;">Dashboard (WordCloud)</span>'
-        tab2_title = '<span style="font-size: 20px; font-weight: bold;">Keyword List</span>'
-        tab3_title = '<span style="font-size: 20px; font-weight: bold;">Co-occurrence Network</span>'
-        
-        t1, t2, t3 = st.tabs([tab1_title, tab2_title, tab3_title])
+        t1, t2, t3 = st.tabs(["Dashboard (WordCloud)", "Keyword List", "Co-occurrence Network"])
         
         with t1:
-            st.image(generate_wordcloud(freq).to_array())
+            st.markdown("### Dashboard (WordCloud)")
+            if freq: st.image(generate_wordcloud(freq).to_array())
+            else: st.warning("No data found.")
         with t2:
-            st.markdown("### <span style='font-size: 24px;'>Top 20 Keywords</span>", unsafe_allow_html=True)
-            st.table(word_df.sort_values('Score', ascending=False).head(20))
+            st.markdown("### Keyword List")
+            if not word_df.empty: st.table(word_df.sort_values('Score', ascending=False).head(20))
+            else: st.warning("No keywords found.")
         with t3:
-            st.markdown("### <span style='font-size: 24px;'>Word Co-occurrence Correlation Matrix</span>", unsafe_allow_html=True)
-            st.dataframe(corr_df.style.background_gradient(cmap='Blues'))
+            st.markdown("### Co-occurrence Network")
+            if not corr_df.empty: st.dataframe(corr_df.style.background_gradient(cmap='Blues'))
+            else: st.warning("No correlation data found.")
