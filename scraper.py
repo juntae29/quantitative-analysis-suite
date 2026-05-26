@@ -1,14 +1,12 @@
 import requests
-import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 
-def fetch_arxiv_oai(query):
-    # Using the OAI-PMH endpoint designed for automated harvesting
-    url = f"http://export.arxiv.org/api/query?search_query={query}&max_results=10"
+def scrape_text_from_url(url, query=None):
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            # Logic to parse the Atom XML feed
-            return response.text
-        return None
+        search_url = f"{url}?q={query}" if query else url
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(search_url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        return soup.get_text(separator=' ').strip()
     except:
         return None

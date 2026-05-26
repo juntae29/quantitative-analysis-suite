@@ -30,7 +30,7 @@ with st.sidebar:
             if t: df = pd.DataFrame({"Abstract": [t]})
             
     elif mode == "Web URL":
-        u = st.text_input("Enter URL")
+        u = st.text_input("URL")
         q = st.text_input("Query (Optional)")
         if st.button("Fetch"):
             text = scrape_text_from_url(u, q)
