@@ -9,18 +9,25 @@ st.title("🌐 Multi-Source Text Data Mining Analyzer")
 
 with st.sidebar:
     st.header("⚙️ Configuration")
-    mode = st.selectbox("Select Mode", ["arXiv Search", "CSV Upload", "PDF Analysis", "Web URL"])
+    mode = st.selectbox("Select Mode", ["arXiv Search", "Custom Text Input", "CSV Upload", "PDF Analysis", "Web URL"])
     
     df = None
     if mode == "arXiv Search":
-        st.markdown("### Search Strategy")
-        st.info("Use operators: `AND`, `OR`, `\" \"` (e.g. `\"Deep Learning\" AND medical`)")
+        st.info("Operators: AND, OR, \" \" (e.g. \"Deep Learning\" AND medicine)")
         keyword = st.text_input("Query", value='"Artificial Intelligence" AND medicine')
         num = st.slider("Results", 10, 100, 30)
-        if st.button("Fetch arXiv Data"):
-            if run_web_scraper(keyword, num): df = pd.read_csv("scraped_data.csv")
-            else: st.error("Failed to fetch data.")
+        if st.button("Fetch Data"):
+            with st.spinner("Fetching from arXiv..."):
+                if run_web_scraper(keyword, num):
+                    df = pd.read_csv("scraped_data.csv")
+                else:
+                    st.error("No data found or connection failed. Try a broader query.")
             
+    elif mode == "Custom Text Input":
+        text_input = st.text_area("Paste your text here", height=200)
+        if st.button("Analyze Text"):
+            if text_input: df = pd.DataFrame({"Abstract": [text_input]})
+
     elif mode == "CSV Upload":
         f = st.file_uploader("Upload CSV", type=["csv"])
         if f: df = pd.read_csv(f)
@@ -29,13 +36,15 @@ with st.sidebar:
         f = st.file_uploader("Upload PDF", type=["pdf"])
         if f:
             reader = PdfReader(f)
-            df = pd.DataFrame({"Abstract": ["".join([p.extract_text() for p in reader.pages])]})
+            text = "".join([p.extract_text() for p in reader.pages])
+            df = pd.DataFrame({"Abstract": [text]})
             
     elif mode == "Web URL":
         u = st.text_input("Enter URL")
         if st.button("Fetch"):
             text = scrape_text_from_url(u)
             if text: df = pd.DataFrame({"Abstract": [text]})
+            else: st.error("Failed to fetch from URL.")
 
 
 
@@ -46,3 +55,5 @@ if df is not None and not df.empty:
     with col1: st.image(generate_wordcloud_obj(words).to_array())
     with col2: st.bar_chart(word_df.set_index("Word"))
     st.dataframe(df)
+else:
+    st.info("Please configure your input and launch analysis.")

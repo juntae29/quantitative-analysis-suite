@@ -4,15 +4,9 @@ import os
 
 def run_web_scraper(search_query, num_papers):
     if os.path.exists("scraped_data.csv"): os.remove("scraped_data.csv")
-    
     try:
         client = arxiv.Client(delay_seconds=3.0, num_retries=3)
-        # 검색어는 입력받은 그대로 처리 (사용자가 연산자 사용 가능)
-        search = arxiv.Search(
-            query=search_query, 
-            max_results=num_papers, 
-            sort_by=arxiv.SortCriterion.SubmittedDate
-        )
+        search = arxiv.Search(query=search_query, max_results=num_papers, sort_by=arxiv.SortCriterion.SubmittedDate)
         
         extracted = []
         for result in client.results(search):
@@ -21,9 +15,7 @@ def run_web_scraper(search_query, num_papers):
         if not extracted: return False
         pd.DataFrame(extracted).to_csv("scraped_data.csv", index=False, encoding="utf-8-sig")
         return True
-    except Exception as e:
-        print(f"API Error: {e}")
-        return False
+    except: return False
 
 def scrape_text_from_url(url):
     import requests
