@@ -1,7 +1,6 @@
 import pandas as pd
 import re
 import os
-import matplotlib.font_manager as fm
 from sklearn.feature_extraction.text import TfidfVectorizer
 from wordcloud import WordCloud
 
@@ -21,19 +20,15 @@ def process_advanced_mining(df, column_name):
     return word_df, dict(zip(word_df['Word'], word_df['Count']))
 
 def generate_wordcloud_obj(word_dict):
-    # 폰트 경로를 프로젝트 루트에서 직접 지정
     font_path = os.path.join(os.getcwd(), "NanumGothic.ttf")
-    
-    # 폰트 파일 존재 여부 확인 후 로드
-    if not os.path.exists(font_path):
-        font_path = None
-        
-    wc = WordCloud(
-        width=800, height=400, 
-        background_color='white', 
-        font_path=font_path
-    )
-    
+    wc = WordCloud(width=800, height=400, background_color='white', 
+                   font_path=font_path if os.path.exists(font_path) else None)
     if not word_dict: return wc
     wc.generate_from_frequencies(word_dict)
     return wc
+
+def map_taxonomy(word_list, taxonomy_dict):
+    results = {}
+    for category, keywords in taxonomy_dict.items():
+        results[category] = [word for word in word_list if word in [k.strip() for k in keywords.split(",")]]
+    return results
