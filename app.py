@@ -1,16 +1,15 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt  # 이 부분이 누락되면 NameError가 발생한다
 from pypdf import PdfReader
 import openpyxl
 from analyzer import run_analysis, set_font, generate_wordcloud
 
 st.set_page_config(layout="wide")
 
+# Sidebar 설정
 with st.sidebar:
     st.title("User Guide")
-    st.markdown("1. Select source.\n2. Upload file.\n3. Run analysis.")
-    st.markdown("---")
-    
     input_mode = st.radio("Input Source", ["CSV/Excel Upload", "PDF Document", "Text Input"])
     
     if "data" not in st.session_state:
@@ -26,11 +25,9 @@ with st.sidebar:
                 else:
                     st.session_state.data = pd.read_excel(uploaded)
                 
-                text_cols = st.session_state.data.select_dtypes(include=['object']).columns.tolist()
-                if text_cols:
-                    st.session_state.column = st.selectbox("Select Text Column", text_cols)
-                else:
-                    st.error("No text-based column found.")
+                cols = st.session_state.data.select_dtypes(include=['object']).columns.tolist()
+                if cols:
+                    st.session_state.column = st.selectbox("Select Text Column", cols)
             except Exception as e:
                 st.error(f"Error: {e}")
             
@@ -48,9 +45,7 @@ with st.sidebar:
             st.session_state.data = pd.DataFrame({"Content": [text]})
             st.session_state.column = "Content"
 
-    st.markdown("---")
-    st.text("여호와를 찬양하라!")
-
+# 메인 화면
 st.title("Data Mining Analyzer")
 
 if st.session_state.data is not None and st.session_state.column:
@@ -58,17 +53,15 @@ if st.session_state.data is not None and st.session_state.column:
         set_font()
         result_df, token_counts = run_analysis(st.session_state.data, st.session_state.column)
         
-        if result_df is not None and not result_df.empty:
+        if result_df is not None:
             st.table(result_df)
-            
-            # 워드클라우드 시각화 추가
             st.subheader("Frequency Visualization")
-            wc = generate_wordcloud(token_counts)
+            
+            # Matplotlib 객체 생성
             fig, ax = plt.subplots()
+            wc = generate_wordcloud(token_counts)
             ax.imshow(wc, interpolation='bilinear')
             ax.axis('off')
             st.pyplot(fig)
         else:
-            st.error("Analysis failed. No tokens found.")
-else:
-    st.info("Please provide input in the sidebar.")
+            st.error("No meaningful tokens detected. Check the column selection.")
