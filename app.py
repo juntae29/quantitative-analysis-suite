@@ -13,7 +13,7 @@ with st.sidebar:
     st.divider()
     st.header("2. Taxonomy Settings")
     cat_name = st.text_input("Category Label", "Methodology")
-    cat_words = st.text_input("Target Keywords", "분석, 모델, 데이터")
+    cat_words = st.text_input("Target Keywords (comma separated)", "분석, 모델, 데이터")
 
 df = None
 if mode == "CSV Upload":
@@ -37,20 +37,18 @@ elif mode == "Web URL":
         if text: df = pd.DataFrame({"Content": [text]})
 
 if df is not None and not df.empty:
-    selected_col = st.selectbox("Select Column to Analyze:", df.columns)
-    word_df, word_dict = process_advanced_mining(df, selected_col)
+    col_sel = st.selectbox("Select Column to Analyze:", df.columns)
+    word_df, word_dict = process_advanced_mining(df, col_sel)
     
-    tab1, tab2, tab3 = st.tabs(["Dashboard", "Taxonomy Mapping", "Data Preview"])
-    with tab1:
-        st.subheader("Key Insight: TF-IDF Importance")
+    t1, t2, t3 = st.tabs(["Dashboard", "Taxonomy Mapping", "Data Preview"])
+    with t1:
         c1, c2 = st.columns(2)
         with c1: st.image(generate_wordcloud_obj(word_dict).to_array())
         with c2: st.bar_chart(word_df.set_index("Word"))
-    with tab2:
-        st.subheader(f"Taxonomy Classification: {cat_name}")
-        mapping = map_taxonomy(word_dict.keys(), {cat_name: [w.strip() for w in cat_words.split(",")]})
-        st.info(f"Matches: {', '.join(mapping[cat_name])}")
-    with tab3:
+    with t2:
+        mapping = map_taxonomy(word_dict.keys(), {cat_name: cat_words})
+        st.info(f"Matches found: {', '.join(mapping[cat_name])}")
+    with t3:
         st.dataframe(df)
 else:
     st.info("Please load data via the sidebar.")
