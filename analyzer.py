@@ -28,12 +28,9 @@ def run_quantitative_analysis(df, column_name):
     tfidf = vec.fit_transform(data)
     words = vec.get_feature_names_out()
     
-    # 1. 빈도 분석
     freq = dict(zip(words, tfidf.sum(axis=0).A1))
-    # 2. 관계 분석 (Co-occurrence)
     sim = cosine_similarity(tfidf.T)
     corr_df = pd.DataFrame(sim, index=words, columns=words)
-    # 3. 데이터 프레임
     word_df = pd.DataFrame({'Word': words, 'Score': tfidf.sum(axis=0).A1})
     
     return freq, corr_df, word_df
