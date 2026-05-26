@@ -1,32 +1,45 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from wordcloud import WordCloud
+from konlpy.tag import Okt
+import os
+
+okt = Okt()
+
+def tokenize(text):
+    return [word for word, pos in okt.pos(text) if pos in ['Noun', 'Verb', 'Adjective']]
 
 def process_advanced_mining(df, column_name):
-    target_col = column_name if column_name in df.columns else df.select_dtypes(include=['object']).columns[0]
+    data = df[column_name].dropna().astype(str)
+    if data.empty: return pd.DataFrame(), {}
     
-    # 텍스트 데이터 정제: 결측치 제거 및 문자열 변환
-    data = df[target_col].dropna().astype(str)
-    if data.empty:
-        return pd.DataFrame(), {}
-        
-    corpus = data.tolist()
+    vectorizer = TfidfVectorizer(tokenizer=tokenize, ngram_range=(1, 2), max_features=50)
+    tfidf_matrix = vectorizer.fit_transform(data)
     
-    # TF-IDF 적용 (데이터가 적을 경우 오류 방지)
-    try:
-        vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words='english', max_features=50)
-        tfidf_matrix = vectorizer.fit_transform(corpus)
-        
-        feature_names = vectorizer.get_feature_names_out()
-        scores = tfidf_matrix.sum(axis=0).A1
-        word_df = pd.DataFrame({'Word': feature_names, 'Count': scores})
-        word_df = word_df.sort_values(by='Count', ascending=False)
-        return word_df, dict(zip(word_df['Word'], word_df['Count']))
-    except:
-        return pd.DataFrame(), {}
+    feature_names = vectorizer.get_feature_names_out()
+    scores = tfidf_matrix.sum(axis=0).A1
+    word_df = pd.DataFrame({'Word': feature_names, 'Count': scores}).sort_values(by='Count', ascending=False)
+    return word_df, dict(zip(word_df['Word'], word_df['Count']))
 
 def generate_wordcloud_obj(word_dict):
-    wc = WordCloud(width=800, height=400, background_color='white')
+    # 시스템에 설치된 나눔고딕 혹은 프로젝트 내 파일을 우선 탐색
+    font_paths = [
+        "NanumGothic.ttf", 
+        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+        "/usr/share/fonts/nanum/NanumGothic.ttf"
+    ]
+    
+    selected_font = None
+    for path in font_paths:
+        if os.path.exists(path):
+            selected_font = path
+            break
+            
+    wc = WordCloud(
+        width=800, height=400, 
+        background_color='white', 
+        font_path=selected_font
+    )
     if not word_dict: return wc
     wc.generate_from_frequencies(word_dict)
     return wc
