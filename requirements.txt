@@ -1,7 +1,7 @@
 streamlit
 pandas
+kiwipiepy
+wordcloud
+pypdf
 beautifulsoup4
 requests
-wordcloud
-kiwipiepy
-pypdf
