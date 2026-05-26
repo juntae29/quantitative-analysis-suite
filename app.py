@@ -33,7 +33,9 @@ if st.button("Launch Analysis"):
     df = None
     with st.spinner("Analyzing... Please wait."):
         if mode_data["type"] == "web":
+            # 스크래핑 시도 후 성공 여부 확인
             if run_web_scraper(mode_data["keyword"], mode_data["num"]):
+                # 파일이 존재하고 데이터가 있는지 확인
                 if os.path.exists("scraped_data.csv") and os.path.getsize("scraped_data.csv") > 0:
                     df = pd.read_csv("scraped_data.csv")
                 else:
