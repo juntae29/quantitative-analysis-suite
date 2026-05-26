@@ -19,6 +19,5 @@ def generate_wordcloud_obj(words):
 def map_taxonomy(word_list, taxonomy_dict):
     results = {}
     for category, keywords in taxonomy_dict.items():
-        # word_list는 단어 빈도 딕셔너리의 키들임
         results[category] = [word for word in word_list if word in keywords]
     return results
