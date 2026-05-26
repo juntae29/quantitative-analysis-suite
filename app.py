@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import networkx as nx
 from pypdf import PdfReader
 from analyzer import run_quantitative_analysis, generate_wordcloud
 
@@ -7,14 +9,8 @@ st.set_page_config(layout="wide")
 
 st.markdown("""
     <style>
-    button[data-baseweb="tab"] {
-        font-size: 20px !important;
-        font-weight: bold !important;
-    }
-    /* Force hide the caption in text_area */
-    div[data-baseweb="textarea"] + div {
-        display: none !important;
-    }
+    button[data-baseweb="tab"] { font-size: 20px !important; font-weight: bold !important; }
+    div[data-baseweb="textarea"] + div { display: none !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -37,26 +33,23 @@ elif mode == "Text Input":
     if t: df = pd.DataFrame({"Content": [t]})
 
 if df is not None:
-    if mode == "CSV Upload":
-        col = st.selectbox("Select Column", df.columns)
-    else:
+    if mode == "CSV Upload": col = st.selectbox("Select Column", df.columns)
+    else: 
         col = "Content"
         st.info(f"Analysis will be performed on the '{col}' column.")
 
     if st.button("Run Analysis"):
-        freq, corr_df, word_df = run_quantitative_analysis(df, col)
+        freq, corr_df, word_df, G = run_quantitative_analysis(df, col)
         
         t1, t2, t3 = st.tabs(["Dashboard (WordCloud)", "Keyword List", "Co-occurrence Network"])
         
         with t1:
-            st.markdown("### Dashboard (WordCloud)")
             if freq: st.image(generate_wordcloud(freq).to_array())
-            else: st.warning("No data found.")
         with t2:
-            st.markdown("### Keyword List")
-            if not word_df.empty: st.table(word_df.sort_values('Score', ascending=False).head(20))
-            else: st.warning("No keywords found.")
+            st.table(word_df.sort_values('Score', ascending=False).head(20))
         with t3:
-            st.markdown("### Co-occurrence Network")
-            if not corr_df.empty: st.dataframe(corr_df.style.background_gradient(cmap='Blues'))
-            else: st.warning("No correlation data found.")
+            if G and len(G.nodes) > 0:
+                fig, ax = plt.subplots(figsize=(10, 8))
+                nx.draw(G, with_labels=True, node_color='skyblue', font_family='sans-serif', ax=ax)
+                st.pyplot(fig)
+            else: st.warning("Not enough data for network visualization.")

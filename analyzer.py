@@ -2,6 +2,7 @@ import pandas as pd
 import re
 import os
 import requests
+import networkx as nx
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -22,9 +23,9 @@ def tokenize(text):
 
 def run_quantitative_analysis(df, column_name):
     data = df[column_name].dropna().astype(str)
-    if data.empty: return {}, pd.DataFrame(), pd.DataFrame()
+    if data.empty: return {}, pd.DataFrame(), pd.DataFrame(), None
     
-    vec = TfidfVectorizer(tokenizer=tokenize, token_pattern=None, min_df=1)
+    vec = TfidfVectorizer(tokenizer=tokenize, token_pattern=None, min_df=2)
     tfidf = vec.fit_transform(data)
     words = vec.get_feature_names_out()
     
@@ -33,7 +34,14 @@ def run_quantitative_analysis(df, column_name):
     corr_df = pd.DataFrame(sim, index=words, columns=words)
     word_df = pd.DataFrame({'Word': words, 'Score': tfidf.sum(axis=0).A1})
     
-    return freq, corr_df, word_df
+    # Network Graph Generation
+    G = nx.Graph()
+    for i in range(len(words)):
+        for j in range(i + 1, len(words)):
+            if sim[i, j] > 0.2: # Threshold
+                G.add_edge(words[i], words[j], weight=sim[i, j])
+                
+    return freq, corr_df, word_df, G
 
 def generate_wordcloud(freq):
     wc = WordCloud(width=800, height=400, background_color='white', font_path=get_font())
