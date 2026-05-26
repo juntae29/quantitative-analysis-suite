@@ -7,34 +7,31 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
-# CSS: 위젯 숨김 방지 및 안내 문구 스타일 고정
+# CSS: 레이아웃 간섭 최소화
 st.markdown("""
     <style>
-    .fixed-guide {
-        background-color: #fff3cd;
-        border: 1px solid #ffeeba;
+    .guide-box {
+        background-color: #e8f4fd;
         padding: 20px;
         border-radius: 10px;
-        color: #856404;
-        margin-bottom: 20px;
+        border-left: 5px solid #2196f3;
+        margin-bottom: 30px;
     }
-    button[data-baseweb="tab"] { font-size: 20px !important; font-weight: bold !important; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("Data Mining Analyzer")
 
-# HTML을 이용한 직접 렌더링 (위젯 CSS 간섭 회피)
-st.markdown("""
-<div class="fixed-guide">
-    <h3>💡 이용 안내</h3>
-    <ul>
-        <li>1. 왼쪽 사이드바에서 데이터 입력 방식을 선택한다.</li>
-        <li>2. 데이터를 업로드하거나 문장을 입력한다.</li>
-        <li>3. <b>'Run Analysis'</b> 버튼을 누르면 분석이 시작된다.</li>
-    </ul>
-</div>
-""", unsafe_allow_html=True)
+# 강제 안내 영역: 제목 바로 아래에 명확하게 배치
+with st.container():
+    st.markdown("""
+    <div class="guide-box">
+        <h3>💡 이용 안내</h3>
+        <p>1. 왼쪽 사이드바에서 <b>데이터 입력 방식</b>(CSV, PDF, Text)을 선택하시오.</p>
+        <p>2. 해당 방식에 맞춰 데이터를 <b>업로드하거나 문장을 붙여넣으시오.</b></p>
+        <p>3. 상자에 데이터를 넣은 후 나타나는 <b>'Run Analysis'</b> 버튼을 클릭하시오.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 set_matplotlib_font()
 
@@ -42,6 +39,7 @@ mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Text Inp
 df = None
 col = None
 
+# 모드별 입력창
 if mode == "CSV Upload":
     f = st.file_uploader("Upload CSV", type=["csv"])
     if f: 
@@ -60,6 +58,7 @@ elif mode == "Text Input":
         df = pd.DataFrame({"Content": [t]})
         col = "Content"
 
+# 분석 실행부
 if df is not None:
     if mode != "CSV Upload":
         st.write(f"**Target Column:** '{col}'")
