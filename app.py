@@ -7,8 +7,10 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
+# CSS: 상단 여백 확보 및 안내 문구 스타일 보정
 st.markdown("""
     <style>
+    .block-container { padding-top: 1rem; }
     button[data-baseweb="tab"] { font-size: 20px !important; font-weight: bold !important; }
     div[data-baseweb="textarea"] + div { display: none !important; }
     </style>
@@ -16,13 +18,8 @@ st.markdown("""
 
 st.title("Data Mining Analyzer")
 
-# 가이드 문구 노출: 상단에 명확하게 노출
-st.info("""
-### 📢 User Guide
-1. **Select Input:** Choose your data source (CSV, PDF, or Text) from the left sidebar.
-2. **Upload/Paste:** Provide the file or text content.
-3. **Run:** Click the **'Run Analysis'** button to generate insights.
-""")
+# 안내 문구: 경고 박스(warning)는 스타일이 강제되어 더 잘 보임
+st.warning("### 💡 이용 안내\n1. 왼쪽 사이드바에서 데이터 입력 방식을 선택한다.\n2. 데이터를 업로드하거나 문장을 붙여넣는다.\n3. **'Run Analysis'** 버튼을 누르면 분석이 시작된다.")
 
 set_matplotlib_font()
 
