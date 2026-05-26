@@ -8,24 +8,22 @@ st.set_page_config(layout="wide")
 st.title("🌐 Multi-Source Text Data Mining Analyzer")
 
 with st.sidebar:
-    mode = st.selectbox("Select Analysis Mode", ["arXiv Web Scraping", "PDF Document Analysis", "Custom Text Input", "Web URL Analysis"])
+    mode = st.selectbox("Mode", ["arXiv Web Scraping", "PDF Document Analysis", "Custom Text Input", "Web URL Analysis"])
     if mode == "arXiv Web Scraping":
-        keyword = st.text_input("Research Keyword", "Artificial Intelligence")
-        num = st.slider("Number of Papers", 10, 50, 20)
+        keyword = st.text_input("Keyword", "Artificial Intelligence")
+        num = st.slider("Papers", 10, 50, 20)
     elif mode == "Web URL Analysis":
-        url = st.text_input("Website URL")
+        url = st.text_input("URL")
     elif mode == "PDF Document Analysis":
-        pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
+        pdf_file = st.file_uploader("PDF", type=["pdf"])
     else:
-        custom_text = st.text_area("Paste text here", height=200)
+        custom_text = st.text_area("Text", height=200)
 
 if st.button("Launch Analysis"):
     df = None
     if mode == "arXiv Web Scraping":
         if run_web_scraper(keyword, num):
             df = pd.read_csv("scraped_data.csv")
-        else:
-            st.error("Failed to connect to arXiv via RSS. Server might be blocked.")
     elif mode == "PDF Document Analysis" and pdf_file:
         reader = PdfReader(pdf_file)
         df = pd.DataFrame({"Abstract": ["".join([p.extract_text() for p in reader.pages])]})
