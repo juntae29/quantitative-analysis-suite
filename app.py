@@ -14,17 +14,15 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Ensure title and guide are clearly separated
 st.title("Data Mining Analyzer")
 
-# Enhanced Instruction Box
-with st.expander("📌 Click here for usage instructions", expanded=True):
-    st.markdown("""
-    **Follow these steps to analyze your data:**
-    1. **Select Input:** Choose your data source (CSV, PDF, or Text) from the left sidebar.
-    2. **Upload/Paste:** Provide the file or text content.
-    3. **Run:** Click the **'Run Analysis'** button to generate insights.
-    """)
+# 가이드 문구 노출: 상단에 명확하게 노출
+st.info("""
+### 📢 User Guide
+1. **Select Input:** Choose your data source (CSV, PDF, or Text) from the left sidebar.
+2. **Upload/Paste:** Provide the file or text content.
+3. **Run:** Click the **'Run Analysis'** button to generate insights.
+""")
 
 set_matplotlib_font()
 
