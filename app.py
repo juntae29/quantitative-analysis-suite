@@ -7,7 +7,6 @@ from analyzer import run_quantitative_analysis, generate_wordcloud, set_matplotl
 
 st.set_page_config(layout="wide")
 
-# CSS: 상단 여백 확보 및 안내 문구 스타일 보정
 st.markdown("""
     <style>
     .block-container { padding-top: 1rem; }
@@ -18,7 +17,7 @@ st.markdown("""
 
 st.title("Data Mining Analyzer")
 
-# 안내 문구: 경고 박스(warning)는 스타일이 강제되어 더 잘 보임
+# 상단 안내 문구 (모든 모드에서 항상 표시)
 st.warning("### 💡 이용 안내\n1. 왼쪽 사이드바에서 데이터 입력 방식을 선택한다.\n2. 데이터를 업로드하거나 문장을 붙여넣는다.\n3. **'Run Analysis'** 버튼을 누르면 분석이 시작된다.")
 
 set_matplotlib_font()
@@ -40,10 +39,17 @@ elif mode == "PDF Document":
         df = pd.DataFrame({"Content": [text]})
         col = "Content"
 elif mode == "Text Input":
-    t = st.text_area("Paste Text", label_visibility="collapsed")
+    # placeholder 추가로 빈 상자 느낌 제거
+    t = st.text_area(
+        "Paste Text", 
+        placeholder="여기에 분석할 텍스트를 붙여넣으시오.", 
+        label_visibility="collapsed"
+    )
     if t: 
         df = pd.DataFrame({"Content": [t]})
         col = "Content"
+    else:
+        st.info("왼쪽에서 'Text Input'을 선택했으므로, 이 상자에 텍스트를 입력해야 분석이 가능하다.")
 
 if df is not None:
     if mode != "CSV Upload":
