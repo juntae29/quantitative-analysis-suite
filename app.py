@@ -16,7 +16,7 @@ input_mode = st.sidebar.radio("Input Source", ["CSV Upload", "PDF Document", "Te
 data_frame = None
 target_column = None
 
-# 3. Input Area (Text Input is placed high up)
+# 3. Input Area (Text Input is placed high up, right under the title)
 if input_mode == "Text Input":
     user_text = st.text_area("Input text for analysis", placeholder="Paste your text here.", height=150)
     if user_text: 
@@ -37,12 +37,12 @@ elif input_mode == "PDF Document":
         data_frame = pd.DataFrame({"Content": [text_content]})
         target_column = "Content"
 
-# 4. User Guide (Placed below input area)
+# 4. User Guide (Placed below the input area)
 st.markdown("---")
 st.markdown("### 💡 User Guide")
 st.markdown("1. Select the input method from the left sidebar.")
-st.markdown("2. Upload your file or input text in the designated area.")
-st.markdown("3. Click 'Run Analysis' to generate insights.")
+st.markdown("2. Upload your file or input text in the designated area above.")
+st.markdown("3. Click 'Run Analysis' below to generate insights.")
 st.markdown("---")
 
 # 5. Analysis Execution
