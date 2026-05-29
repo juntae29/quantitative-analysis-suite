@@ -1,13 +1,28 @@
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import platform
 import networkx as nx
 import seaborn as sns
 from scipy.cluster.hierarchy import dendrogram, linkage
 
-# 한글 폰트 설정
-font_path = "C:/Windows/Fonts/malgun.ttf"
-font_name = fm.FontProperties(fname=font_path).get_name()
-plt.rc('font', family=font_name)
+# 운영체제에 따른 폰트 자동 설정
+system_name = platform.system()
+if system_name == "Windows":
+    font_path = "C:/Windows/Fonts/malgun.ttf"
+elif system_name == "Darwin": # Mac
+    font_path = "/Library/Fonts/AppleGothic.ttf"
+else: # Linux (Streamlit Cloud 환경)
+    font_path = None
+
+if font_path and fm.findfont(fm.FontProperties(fname=font_path), rebuild_if_missing=False) != fm.findfont(fm.FontProperties(family='sans-serif')):
+    try:
+        font_name = fm.FontProperties(fname=font_path).get_name()
+        plt.rc('font', family=font_name)
+    except:
+        plt.rc('font', family='sans-serif')
+else:
+    plt.rc('font', family='sans-serif')
+
 plt.rcParams['axes.unicode_minus'] = False
 
 class Visualizer:
@@ -48,7 +63,6 @@ class Visualizer:
 
     @staticmethod
     def draw_heatmap(matrix, ax):
-        # 상관관계 히트맵 (Heatmap)
         corr = matrix.corr()
         sns.heatmap(corr, ax=ax, cmap='Blues', annot=False, cbar=True)
         ax.set_title("Word Similarity Heatmap")
