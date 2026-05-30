@@ -30,7 +30,7 @@ with st.sidebar:
             st.stop()
             
         st.session_state.df = df
-        tokens = [processor.normalize(t) for t in df['combined']]
+        tokens = [processor.normalize(str(t)) for t in df['combined'].fillna('')]
         st.session_state.matrix = CoOccurrenceEngine.create_matrix([t for t in tokens if len(t) > 1])
 
 if 'matrix' in st.session_state and st.session_state.matrix is not None:

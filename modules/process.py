@@ -24,13 +24,15 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
-        # 1. 텍스트를 강제로 유니코드 문자열로 변환
-        text = str(text).encode('utf-8', 'ignore').decode('utf-8')
-        # 2. 한글과 영어, 숫자만 추출
-        text = re.sub(r'[^가-힣a-zA-Z0-9\s]', ' ', text).lower()
+    # 입력값이 문자열이 아닐 경우 빈 문자열로 처리하여 에러 방지
+    if not isinstance(text, str):
+        text = str(text) if text is not None else ""
+        
+    # 이후 기존 정제 로직 진행
+    text = re.sub(r'[^가-힣a-zA-Z0-9\s]', ' ', text).lower()
         words = text.split()
         
-        # 시스템 노이즈 단어 목록
+        # 시스템 노이즈 단어 목록def normalize
         noise_words = {
             'fonts', 'visualizer', 'process', 'engine', 'main', 'py', 'ttf', 'otf', 
             'csv', 'xlsx', 'pdf', 'modules', 'data', 'git', 'commit', 'push', 
