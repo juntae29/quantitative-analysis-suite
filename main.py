@@ -30,7 +30,8 @@ with st.sidebar:
             st.stop()
             
         st.session_state.df = df
-        tokens = [processor.normalize(str(t)) for t in df['combined'].fillna('')]
+        # 결측치를 처리하고 데이터를 안전하게 정제
+        tokens = [processor.normalize(str(t)) for t in df['combined'].fillna('') if str(t).strip() != '']
         st.session_state.matrix = CoOccurrenceEngine.create_matrix([t for t in tokens if len(t) > 1])
 
 if 'matrix' in st.session_state and st.session_state.matrix is not None:
@@ -40,7 +41,7 @@ if 'matrix' in st.session_state and st.session_state.matrix is not None:
         fig, ax = plt.subplots(figsize=(chart_size, chart_size))
         Visualizer.draw_network(st.session_state.matrix, n_words, ax)
         st.pyplot(fig)
-        # 네트워크 그래프 PNG 다운로드 버튼 추가
+        
         buf = io.BytesIO()
         fig.savefig(buf, format="png")
         st.download_button("Download Network Graph (PNG)", buf.getvalue(), "network_graph.png", "image/png")
