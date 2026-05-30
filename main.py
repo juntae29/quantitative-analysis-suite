@@ -30,7 +30,6 @@ with st.sidebar:
             st.stop()
             
         st.session_state.df = df
-        # 결측치를 처리하고 데이터를 안전하게 정제
         tokens = [processor.normalize(str(t)) for t in df['combined'].fillna('') if str(t).strip() != '']
         st.session_state.matrix = CoOccurrenceEngine.create_matrix([t for t in tokens if len(t) > 1])
 
@@ -86,7 +85,6 @@ if 'matrix' in st.session_state and st.session_state.matrix is not None:
             Visualizer.draw_heatmap(subset, ax)
             st.pyplot(fig)
             buf = io.BytesIO()
-            fig.savefig(buf, format="png")
             st.download_button("Download Heatmap (PNG)", buf.getvalue(), "heatmap.png", "image/png")
 
     with tab3:
