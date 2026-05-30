@@ -5,6 +5,7 @@ import re
 
 class DataProcessor:
     def load_file(self, file):
+        # 기존에 잘 되던 로직 유지
         if file.name.lower().endswith(('.ttf', '.py', '.js', '.css', '.yaml', '.txt')):
             return None
         content = file.getvalue()
@@ -25,6 +26,7 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
+        # 기존 정제 로직 유지
         if not isinstance(text, str):
             text = str(text) if text is not None else ""
         
@@ -37,4 +39,5 @@ class DataProcessor:
             'run', 'fix', 'cloud', 'bash', 'filter', 'rerun', 'loading', 'st', 'streamlit'
         }
         
+        # 반환값 유지
         return [w for w in words if (len(w) > 1 or re.match(r'[가-힣]', w)) and w not in noise_words]
