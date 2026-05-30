@@ -3,6 +3,10 @@ import pypdf, io, re
 
 class DataProcessor:
     def load_file(self, file):
+        # 1. 분석 대상 제외 필터링 추가
+        if file.name.lower().endswith(('.ttf', '.otf', '.woff')):
+            return None
+            
         content = file.getvalue()
         try:
             if file.name.lower().endswith('.pdf'):
