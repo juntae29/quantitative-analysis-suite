@@ -6,22 +6,18 @@ import networkx as nx
 import seaborn as sns
 from scipy.cluster.hierarchy import dendrogram, linkage
 
-# 프로젝트 내부 폰트 경로 설정 (fonts 폴더가 루트에 있다고 가정)
 font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'malgun.ttf')
 
-# 폰트 설정 로직
 if os.path.exists(font_path):
-    # 프로젝트 내 폰트가 존재할 경우 우선 적용
     font_name = fm.FontProperties(fname=font_path).get_name()
     plt.rc('font', family=font_name)
 else:
-    # 폰트가 없을 경우 운영체제별 기본 한글 폰트 탐색
     system_name = platform.system()
     if system_name == "Windows":
         plt.rc('font', family='Malgun Gothic')
-    elif system_name == "Darwin": # Mac
+    elif system_name == "Darwin":
         plt.rc('font', family='AppleGothic')
-    else: # Linux
+    else:
         plt.rc('font', family='sans-serif')
 
 plt.rcParams['axes.unicode_minus'] = False
@@ -35,15 +31,12 @@ class Visualizer:
         node_sizes = [max(node_freqs[n] * 20, 1000) for n in G.nodes()]
         weights = [G[u][v]['weight'] * 0.1 for u, v in G.edges()]
         pos = nx.spring_layout(G, k=0.8, seed=42)
-        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
-                               node_color='#E8EAF6', edgecolors='#FF5252', linewidths=0.5)
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, node_color='#E8EAF6', edgecolors='#FF5252', linewidths=0.5)
         nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.5)
         for node, (x, y) in pos.items():
-            ax.text(x, y, str(node_freqs[node]), fontsize=9, color='#1A237E', 
-                    ha='center', va='center', fontweight='bold')
+            ax.text(x, y, str(node_freqs[node]), fontsize=9, color='#1A237E', ha='center', va='center', fontweight='bold')
         for node, (x, y) in pos.items():
-            ax.text(x, y + 0.08, node, fontsize=9, color='black', 
-                    ha='center', va='bottom', fontweight='bold')
+            ax.text(x, y + 0.08, node, fontsize=9, color='black', ha='center', va='bottom', fontweight='bold')
         ax.set_title("Co-occurrence Network Graph")
         ax.axis('off')
 
