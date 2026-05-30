@@ -3,8 +3,9 @@ import pypdf, io, re
 
 class DataProcessor:
     def load_file(self, file):
-        # 1. 분석 대상 제외 필터링 추가
-        if file.name.lower().endswith(('.ttf', '.otf', '.woff')):
+        # 강력한 필터링: 코드 파일, 폰트 파일, 시스템 파일 무시
+        excluded_extensions = ('.ttf', '.py', '.js', '.css', '.yaml', '.txt')
+        if file.name.lower().endswith(excluded_extensions):
             return None
             
         content = file.getvalue()
@@ -18,7 +19,6 @@ class DataProcessor:
             else:
                 df = pd.read_csv(io.BytesIO(content))
             
-            # 결측치를 빈 문자열로 대체 후 전체 문자열 변환
             df = df.fillna('').astype(str)
             df['combined'] = df.apply(lambda row: ' '.join(row.values), axis=1)
             return df[['combined']]
@@ -26,4 +26,7 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
-        return re.sub(r'[^a-zA-Z0-9가-힣\s]', ' ', str(text)).lower().split()
+        # 한글/영어/숫자 이외의 불필요한 특수문자 제거 및 토큰화
+        words = re.sub(r'[^a-zA-Z0-9가-힣\s]', ' ', str(text)).lower().split()
+        # 추가 필터링: 너무 짧은 단어나 의미 없는 키워드 제거
+        return [w for w in words if len(w) > 1]
