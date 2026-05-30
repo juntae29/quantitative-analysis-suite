@@ -1,27 +1,28 @@
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import platform
+import os
 import networkx as nx
 import seaborn as sns
 from scipy.cluster.hierarchy import dendrogram, linkage
 
-# 운영체제에 따른 폰트 자동 설정
-system_name = platform.system()
-if system_name == "Windows":
-    font_path = "C:/Windows/Fonts/malgun.ttf"
-elif system_name == "Darwin": # Mac
-    font_path = "/Library/Fonts/AppleGothic.ttf"
-else: # Linux (Streamlit Cloud 환경)
-    font_path = None
+# 프로젝트 내부 폰트 경로 설정 (fonts 폴더가 루트에 있다고 가정)
+font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'malgun.ttf')
 
-if font_path and fm.findfont(fm.FontProperties(fname=font_path), rebuild_if_missing=False) != fm.findfont(fm.FontProperties(family='sans-serif')):
-    try:
-        font_name = fm.FontProperties(fname=font_path).get_name()
-        plt.rc('font', family=font_name)
-    except:
-        plt.rc('font', family='sans-serif')
+# 폰트 설정 로직
+if os.path.exists(font_path):
+    # 프로젝트 내 폰트가 존재할 경우 우선 적용
+    font_name = fm.FontProperties(fname=font_path).get_name()
+    plt.rc('font', family=font_name)
 else:
-    plt.rc('font', family='sans-serif')
+    # 폰트가 없을 경우 운영체제별 기본 한글 폰트 탐색
+    system_name = platform.system()
+    if system_name == "Windows":
+        plt.rc('font', family='Malgun Gothic')
+    elif system_name == "Darwin": # Mac
+        plt.rc('font', family='AppleGothic')
+    else: # Linux
+        plt.rc('font', family='sans-serif')
 
 plt.rcParams['axes.unicode_minus'] = False
 
