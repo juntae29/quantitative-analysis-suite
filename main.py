@@ -85,8 +85,9 @@ if 'matrix' in st.session_state and st.session_state.matrix is not None:
             Visualizer.draw_heatmap(subset, ax)
             st.pyplot(fig)
             buf = io.BytesIO()
+            fig.savefig(buf, format="png")
             st.download_button("Download Heatmap (PNG)", buf.getvalue(), "heatmap.png", "image/png")
-
+            
     with tab3:
         st.subheader("KWIC Discovery & Search")
         top_keywords = WordAnalyzer.get_top_keywords(st.session_state.matrix, n=10)
