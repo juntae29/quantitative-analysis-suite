@@ -24,6 +24,8 @@ class Visualizer:
         G = nx.from_pandas_adjacency(top_matrix)
         
         node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
+        
+        # 노드 크기 설정
         node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
         
         edges = G.edges(data=True)
@@ -31,7 +33,7 @@ class Visualizer:
         
         pos = nx.spring_layout(G, k=0.5, seed=42)
         
-        # 원 내부 색상을 'none'으로 설정하여 파란 배경 제거, 테두리만 유지
+        # [핵심] node_color='none'으로 설정하여 파란 배경을 아예 제거하고, 테두리만 빨간색으로 유지
         nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
                                node_color='none', edgecolors='#FF5252', linewidths=1.5)
         
