@@ -18,7 +18,7 @@ class DataProcessor:
                 text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
                 df = pd.DataFrame({'combined': [text]})
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # [초강력 메모리 다이어트: 빈도수 기반 상위 300개 단어 제한 전처리]
+                # [제안 반영: 상위 100개 핵심 텍스트 단어 선별 알고리즘]
                 try:
                     all_words_list = []
                     row_contents = []
@@ -30,25 +30,28 @@ class DataProcessor:
                                     if elem.tag.endswith('t') and elem.text:
                                         cleaned_words = self.normalize(elem.text)
                                         if cleaned_words:
-                                            all_words_list.extend(cleaned_words)
-                                            row_contents.append(cleaned_words)
+                                            # 숫자로만 이루어진 단어는 그래프 왜곡 방지를 위해 원천 제외
+                                            text_only_words = [w for w in cleaned_words if not w.isdigit()]
+                                            if text_only_words:
+                                                all_words_list.extend(text_only_words)
+                                                row_contents.append(text_only_words)
                                     elem.clear()
                     
                     if row_contents:
-                        # 1단계: 전체 단어 중 상위 300개 핵심 단어만 추출 (메모리 덤핑 폭발의 주범인 하위 노이즈 단어 제거)
+                        # 전체 순수 텍스트 중 정확히 상위 100개 단어만 컷오프(Cut-off)하여 사전 구축
                         word_counts = Counter(all_words_list)
-                        top_words = set([word for word, count in word_counts.most_common(300)])
+                        top_100_words = set([word for word, count in word_counts.most_common(100)])
                         
-                        # 2단계: 핵심 단어만 필터링하여 순차 청크 데이터프레임 빌드
                         filtered_rows = []
                         current_chunk = []
                         
                         for row in row_contents:
-                            meaningful_words = [w for w in row if w in top_words]
+                            # 제안하신 대로 상위 100개 단어 리스트에 포함된 단어들만 추출하여 재조립
+                            meaningful_words = [w for w in row if w in top_100_words]
                             if meaningful_words:
                                 current_chunk.extend(meaningful_words)
                                 
-                            if len(current_chunk) >= 50:
+                            if len(current_chunk) >= 40:
                                 filtered_rows.append(" ".join(current_chunk))
                                 current_chunk = []
                                 
@@ -64,7 +67,7 @@ class DataProcessor:
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
             
-            # 기존 원본 가공 흐름 완벽 유지
+            # 기존 원본 파일 가공 흐름 완벽 유지
             df = df.fillna('').astype(str)
             df['combined'] = df.apply(lambda row: ' '.join(row.values), axis=1)
             return df[['combined']]
@@ -72,7 +75,7 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
-        # 원래 잘 되던 단어 정제 로직 및 불용어 세트 100% 동일 유지
+        # 기존 사용자 단어 정제 알고리즘 및 노이즈 필터링 완전 유지 (동일성 보장)
         if not isinstance(text, str):
             text = str(text) if text is not None else ""
         
