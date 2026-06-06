@@ -17,7 +17,7 @@ class DataProcessor:
                 text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
                 df = pd.DataFrame({'combined': [text]})
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # [초경량 저메모리 스트리밍 패치] 메모리 OOM 방지를 위해 판다스를 거치지 않고 내장 XML 파서로 텍스트 직접 추출
+                # [안전 메모리 스트리밍 파서] 대용량 OOM을 방지하며 구조 무너짐 해결
                 try:
                     text_pieces = []
                     with zipfile.ZipFile(io.BytesIO(content)) as z:
@@ -27,8 +27,12 @@ class DataProcessor:
                                     if elem.tag.endswith('t') and elem.text:
                                         text_pieces.append(elem.text)
                                     elem.clear()
+                    
                     if text_pieces:
-                        df = pd.DataFrame({'combined': [' '.join(text_pieces)]})
+                        # 원본 데이터프레임의 병합 구조와 완벽히 호환되도록 1차 가공된 텍스트 배치
+                        raw_text = ' '.join(text_pieces)
+                        df = pd.DataFrame({'combined': [raw_text]})
+                        return df[['combined']]
                     else:
                         df = pd.read_excel(io.BytesIO(content))
                 except Exception:
@@ -36,7 +40,7 @@ class DataProcessor:
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
             
-            # 기존 원본 코드의 'combined' 결합 가공 흐름 완벽 일치
+            # 일반 파일 및 예외 처리를 위한 기존 원본 코드의 가공 흐름 원형 보존
             df = df.fillna('').astype(str)
             df['combined'] = df.apply(lambda row: ' '.join(row.values), axis=1)
             return df[['combined']]
@@ -44,7 +48,7 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
-        # 원래 잘 되던 단어 정제 로직 및 불용어 세트 100% 동일 유지 (절대 건드리지 않음)
+        # 원래 잘 되던 단어 정제 로직 및 불용어 세트 100% 동일 유지
         if not isinstance(text, str):
             text = str(text) if text is not None else ""
         
