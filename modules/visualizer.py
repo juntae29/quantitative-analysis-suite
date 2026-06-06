@@ -24,8 +24,6 @@ class Visualizer:
         G = nx.from_pandas_adjacency(top_matrix)
         
         node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
-        
-        # 노드 크기 설정
         node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
         
         edges = G.edges(data=True)
@@ -33,14 +31,13 @@ class Visualizer:
         
         pos = nx.spring_layout(G, k=0.5, seed=42)
         
-        # 1. 빨간색 테두리는 살리고 내부 색상은 투명(none)으로 설정
+        # 원 내부 색상을 'none'으로 설정하여 파란 배경 제거, 테두리만 유지
         nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
                                node_color='none', edgecolors='#FF5252', linewidths=1.5)
         
-        # 2. 엣지 그리기
         nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.4)
         
-        # 3. 텍스트 라벨링 (원 안에 텍스트와 빈도수 표기)
+        # 텍스트 라벨링
         font_props = {'family': plt.rcParams['font.family'], 'weight': 'bold'}
         for node, (x, y) in pos.items():
             label_text = f"{node}\n({node_freqs[node]})"
