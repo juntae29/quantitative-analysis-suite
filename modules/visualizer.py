@@ -24,23 +24,28 @@ class Visualizer:
         G = nx.from_pandas_adjacency(top_matrix)
         
         node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
+        
+        # 노드 크기 설정
+        node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
+        
         edges = G.edges(data=True)
         weights = [min(data['weight'] * 0.5, 5.0) for u, v, data in edges]
         
         pos = nx.spring_layout(G, k=0.5, seed=42)
         
-        # 1. 원(Node Circle)을 그리는 nx.draw_networkx_nodes 코드를 삭제함
+        # 1. 빨간색 테두리는 살리고 내부 색상은 투명(none)으로 설정
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
+                               node_color='none', edgecolors='#FF5252', linewidths=1.5)
         
-        # 2. 엣지만 그리기
+        # 2. 엣지 그리기
         nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.4)
         
-        # 3. 텍스트 라벨링 (원 없이 텍스트와 빈도수만 표기)
+        # 3. 텍스트 라벨링 (원 안에 텍스트와 빈도수 표기)
         font_props = {'family': plt.rcParams['font.family'], 'weight': 'bold'}
         for node, (x, y) in pos.items():
             label_text = f"{node}\n({node_freqs[node]})"
             ax.text(x, y, label_text, fontsize=9, color='#1A237E', 
-                    ha='center', va='center', fontdict=font_props,
-                    bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='round,pad=0.2'))
+                    ha='center', va='center', fontdict=font_props)
             
         ax.set_title("Co-occurrence Network Graph", fontdict=font_props)
         ax.axis('off')
