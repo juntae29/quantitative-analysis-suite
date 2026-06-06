@@ -25,22 +25,22 @@ class Visualizer:
         
         node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
         
-        # [핵심] 로그 스케일 적용하여 노드 크기 폭발 방지 및 시각적 균형 유지
+        # 로그 스케일링으로 노드 크기 폭발 방지
         node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
         
         edges = G.edges(data=True)
         weights = [min(data['weight'] * 0.5, 5.0) for u, v, data in edges]
         
-        # [핵심] k값을 조절하여 노드 간 척력 강화 (뭉침 방지)
+        # k값을 조절하여 노드 분산 유도
         pos = nx.spring_layout(G, k=0.8, seed=42)
         
-        # [핵심] 파란색 배경 제거: node_color='none' 설정, 빨간 테두리만 유지
+        # [중요] node_color='none'은 노드 내부를 투명하게 만듦
+        # 만약 여전히 파란색이 보인다면, 이전 그래프가 캐시된 것이니 반드시 '강력 새로고침' 필요
         nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
                                node_color='none', edgecolors='#FF5252', linewidths=1.5)
         
         nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.4)
         
-        # 텍스트 라벨링
         font_props = {'family': plt.rcParams['font.family'], 'weight': 'bold'}
         for node, (x, y) in pos.items():
             label_text = f"{node}\n({node_freqs[node]})"
@@ -50,4 +50,25 @@ class Visualizer:
         ax.set_title("Co-occurrence Network Graph", fontdict=font_props)
         ax.axis('off')
 
-    # ... (기타 함수들 draw_mds, draw_dendrogram, draw_heatmap 유지)
+    # MDS, Dendrogram, Heatmap 관련 메서드들은 이전과 동일하게 유지
+    @staticmethod
+    def draw_mds(coords, labels, ax):
+        ax.scatter(coords[:, 0], coords[:, 1], c='#E8EAF6', s=80, edgecolors='#FF5252', linewidths=0.5, alpha=0.8)
+        font_props = {'family': plt.rcParams['font.family']}
+        for i, label in enumerate(labels):
+            ax.text(coords[i, 0], coords[i, 1], str(label), fontsize=9, fontdict=font_props)
+        ax.grid(True, linestyle='--', alpha=0.3)
+        ax.set_title("MDS Mapping", fontdict=font_props)
+
+    @staticmethod
+    def draw_dendrogram(matrix, n_words, ax):
+        top_matrix = matrix.iloc[:n_words, :n_words]
+        linked = linkage(top_matrix, method='ward')
+        dendrogram(linked, labels=[str(l) for l in top_matrix.index.tolist()], ax=ax, leaf_rotation=90)
+        ax.set_title(f"Hierarchical Clustering Dendrogram (Top {n_words})", fontdict={'family': plt.rcParams['font.family']})
+
+    @staticmethod
+    def draw_heatmap(matrix, ax):
+        corr = matrix.corr()
+        sns.heatmap(corr, ax=ax, cmap='Blues', annot=False, cbar=True)
+        ax.set_title("Word Similarity Heatmap", fontdict={'family': plt.rcParams['font.family']})
