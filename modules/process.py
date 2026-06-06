@@ -15,7 +15,7 @@ class DataProcessor:
                 text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
                 df = pd.DataFrame({'combined': [text]})
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # [오직 이 한 줄만 수정] 대용량 엑셀 파일 로딩 시 메모리 초과 에러 방지를 위해 openpyxl 엔진 명시
+                # [오직 이 부분만 수정] 대용량 엑셀 파일 로딩 시 메모리 초과 에러 방지를 위해 openpyxl 엔진 명시
                 df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
