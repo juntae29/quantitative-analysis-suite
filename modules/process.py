@@ -2,6 +2,8 @@ import pandas as pd
 import pypdf
 import io
 import re
+import zipfile
+import xml.etree.ElementTree as ET
 
 class DataProcessor:
     def load_file(self, file):
@@ -15,9 +17,27 @@ class DataProcessor:
                 text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
                 df = pd.DataFrame({'combined': [text]})
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # [안전한 대용량/소용량 통합 패치] 바이트 스트림을 매번 새로 생성하여 포인터 꼬임 방지 및 엔진 명시
-                excel_stream = io.BytesIO(content)
-                df = pd.read_excel(excel_stream, engine='openpyxl')
+                try:
+                    # [대용량 무의존성 패치] 외부 라이브러리 없이 순수 내장 XML 스트리밍으로 텍스트만 고속 추출
+                    strings = []
+                    with zipfile.ZipFile(io.BytesIO(content)) as z:
+                        # 엑셀 내부의 실제 데이터 문자열 맵 추출
+                        if 'xl/sharedStrings.xml' in z.namelist():
+                            with z.open('xl/sharedStrings.xml') as f:
+                                for event, elem in ET.iterparse(f, events=('end',)):
+                                    if elem.tag.endswith('t'): # 텍스트 태그 검색
+                                        if elem.text:
+                                            strings.append(elem.text)
+                                        elem.clear()
+                    
+                    if strings:
+                        # 원형 데이터 구조와 완벽히 호환되도록 단일 컬럼 프레임 생성
+                        df = pd.DataFrame({'combined': [' '.join(strings)]})
+                    else:
+                        # 텍스트 맵이 비어있을 경우 판다스 기본 로더로 안전하게 대체
+                        df = pd.read_excel(io.BytesIO(content))
+                except Exception:
+                    df = pd.read_excel(io.BytesIO(content))
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
             
