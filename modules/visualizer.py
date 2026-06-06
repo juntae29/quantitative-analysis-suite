@@ -1,27 +1,18 @@
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import platform
-import os
+import platform, os
 import networkx as nx
-import seaborn as sns
 import math
 from scipy.cluster.hierarchy import dendrogram, linkage
+import seaborn as sns
 
-# 폰트 설정을 위한 로직
 def set_korean_font():
     font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'malgun.ttf')
-    
     if os.path.exists(font_path):
         fm.fontManager.addfont(font_path)
         plt.rcParams['font.family'] = 'Malgun Gothic'
     else:
-        if platform.system() == "Windows":
-            plt.rcParams['font.family'] = 'Malgun Gothic'
-        elif platform.system() == "Darwin":
-            plt.rcParams['font.family'] = 'AppleGothic'
-        else:
-            plt.rcParams['font.family'] = 'sans-serif'
-            
+        plt.rcParams['font.family'] = 'Malgun Gothic' if platform.system() == "Windows" else 'AppleGothic'
     plt.rcParams['axes.unicode_minus'] = False
 
 set_korean_font()
@@ -32,27 +23,24 @@ class Visualizer:
         top_matrix = matrix.iloc[:n_words, :n_words]
         G = nx.from_pandas_adjacency(top_matrix)
         
-        # 빈도수 데이터 추출 및 노드 크기 스케일링 (로그 스케일 적용으로 대용량 폭발 방지)
         node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
-        node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
-        
-        # 엣지 가중치 강화: 연계 횟수(weight)에 비례하여 굵기 변화 (최댓값 제한)
         edges = G.edges(data=True)
         weights = [min(data['weight'] * 0.5, 5.0) for u, v, data in edges]
         
         pos = nx.spring_layout(G, k=0.5, seed=42)
         
-        # 노드와 엣지 그리기
-        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
-                               node_color='#E8EAF6', edgecolors='#FF5252', linewidths=1.0)
-        nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.6)
+        # 1. 원(Node Circle)을 그리는 nx.draw_networkx_nodes 코드를 삭제함
         
-        # [강화] 라벨링: 단어와 빈도수를 결합하여 명확히 표출
+        # 2. 엣지만 그리기
+        nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.4)
+        
+        # 3. 텍스트 라벨링 (원 없이 텍스트와 빈도수만 표기)
         font_props = {'family': plt.rcParams['font.family'], 'weight': 'bold'}
         for node, (x, y) in pos.items():
             label_text = f"{node}\n({node_freqs[node]})"
-            ax.text(x, y, label_text, fontsize=8, color='#1A237E', 
-                    ha='center', va='center', fontdict=font_props)
+            ax.text(x, y, label_text, fontsize=9, color='#1A237E', 
+                    ha='center', va='center', fontdict=font_props,
+                    bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='round,pad=0.2'))
             
         ax.set_title("Co-occurrence Network Graph", fontdict=font_props)
         ax.axis('off')
