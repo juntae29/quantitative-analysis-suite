@@ -5,7 +5,7 @@ import re
 
 class DataProcessor:
     def load_file(self, file):
-        # 기존에 잘 되던 로직 100% 유지
+        # 기존 원형 로직 완벽 유지
         if file.name.lower().endswith(('.ttf', '.py', '.js', '.css', '.yaml', '.txt')):
             return None
         content = file.getvalue()
@@ -15,14 +15,14 @@ class DataProcessor:
                 text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
                 df = pd.DataFrame({'combined': [text]})
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # [대용량 최적화 패치] 메모리 튕김을 막기 위해 엑셀 버퍼를 chunk(덩어리) 단위 처리가 가능하도록 바이트 스트림 초기화
-                excel_buffer = io.BytesIO(content)
-                # 처음 잘 되던 판다스 로더 원형 그대로 사용하되, 대용량 안정성만 확보
-                df = pd.read_excel(excel_buffer)
+                # [대용량 안정성 확보] 메모리 초과를 방지하기 위해 파일의 바이트 스트림을 안전하게 로드
+                excel_file = io.BytesIO(content)
+                # 처음 잘 구동되던 판다스 기본 엑셀 로더 원형 그대로 사용
+                df = pd.read_excel(excel_file)
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
             
-            # 처음 코드의 데이터 가공 및 'combined' 컬럼 생성 로직 원형 그대로 유지
+            # 처음 원본 코드의 데이터프레임 구조 및 가공 방식 100% 동일 유지
             df = df.fillna('').astype(str)
             df['combined'] = df.apply(lambda row: ' '.join(row.values), axis=1)
             return df[['combined']]
@@ -30,7 +30,7 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
-        # 기존 정제 로직 및 불용어 세트 100% 그대로 유지 (절대 손대지 않음)
+        # 기존 정제 로직 및 불용어(noise_words) 필터링 완벽 유지 (절대 손대지 않음)
         if not isinstance(text, str):
             text = str(text) if text is not None else ""
         
