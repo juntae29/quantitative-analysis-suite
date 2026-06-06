@@ -7,7 +7,7 @@ import seaborn as sns
 import math
 from scipy.cluster.hierarchy import dendrogram, linkage
 
-# 폰트 설정을 위한 로직을 별도 함수로 분리하여 가장 먼저 실행
+# 폰트 설정을 위한 로직
 def set_korean_font():
     font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'malgun.ttf')
     
@@ -24,7 +24,6 @@ def set_korean_font():
             
     plt.rcParams['axes.unicode_minus'] = False
 
-# 모듈 로드 시 즉시 실행
 set_korean_font()
 
 class Visualizer:
@@ -33,15 +32,13 @@ class Visualizer:
         top_matrix = matrix.iloc[:n_words, :n_words]
         G = nx.from_pandas_adjacency(top_matrix)
         
-        # 빈도수 데이터 추출 (대각 행렬 요소)
+        # 빈도수 데이터 추출 및 노드 크기 스케일링 (로그 스케일 적용으로 대용량 폭발 방지)
         node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
-        
-        # 노드 크기 스케일링: 빈도수 로그 스케일 적용 (최대 크기 제한)
         node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
         
-        # 엣지 가중치 강화: 연계 횟수(weight)에 비례하여 굵기 변화
+        # 엣지 가중치 강화: 연계 횟수(weight)에 비례하여 굵기 변화 (최댓값 제한)
         edges = G.edges(data=True)
-        weights = [data['weight'] * 0.5 for u, v, data in edges]
+        weights = [min(data['weight'] * 0.5, 5.0) for u, v, data in edges]
         
         pos = nx.spring_layout(G, k=0.5, seed=42)
         
@@ -50,7 +47,7 @@ class Visualizer:
                                node_color='#E8EAF6', edgecolors='#FF5252', linewidths=1.0)
         nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.6)
         
-        # 라벨링: 단어와 빈도수를 결합하여 명확히 표출
+        # [강화] 라벨링: 단어와 빈도수를 결합하여 명확히 표출
         font_props = {'family': plt.rcParams['font.family'], 'weight': 'bold'}
         for node, (x, y) in pos.items():
             label_text = f"{node}\n({node_freqs[node]})"
