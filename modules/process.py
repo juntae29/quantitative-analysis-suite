@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 class DataProcessor:
     def load_file(self, file):
-        # 기존 파일 차단 규칙 및 원형 로직 100% 보존
+        # 기존 파일 확장자 차단 규칙 및 원형 로직 100% 보존
         if file.name.lower().endswith(('.ttf', '.py', '.js', '.css', '.yaml', '.txt')):
             return None
         content = file.getvalue()
@@ -17,21 +17,31 @@ class DataProcessor:
                 text = "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
                 df = pd.DataFrame({'combined': [text]})
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # [안전 메모리 스트리밍 파서] 대용량 OOM을 방지하며 구조 무너짐 해결
+                # [근본적 메모리 관리 패치] 대용량 덤핑을 막기 위한 행(Row) 단위 순차적 스트리밍 파서
                 try:
-                    text_pieces = []
+                    row_pieces = []
+                    current_row = []
+                    
                     with zipfile.ZipFile(io.BytesIO(content)) as z:
                         if 'xl/sharedStrings.xml' in z.namelist():
                             with z.open('xl/sharedStrings.xml') as f:
+                                # iterparse를 활용해 대용량 XML 구조를 순차적으로 해체하며 메모리 방출
                                 for event, elem in ET.iterparse(f, events=('end',)):
                                     if elem.tag.endswith('t') and elem.text:
-                                        text_pieces.append(elem.text)
+                                        current_row.append(elem.text)
+                                        
+                                        # 일정 토큰 수나 데이터가 쌓이면 순차적으로 청크 분할 저장
+                                        if len(current_row) >= 50:
+                                            row_pieces.append(" ".join(current_row))
+                                            current_row = []
                                     elem.clear()
+                                    
+                            if current_row:
+                                row_pieces.append(" ".join(current_row))
                     
-                    if text_pieces:
-                        # 원본 데이터프레임의 병합 구조와 완벽히 호환되도록 1차 가공된 텍스트 배치
-                        raw_text = ' '.join(text_pieces)
-                        df = pd.DataFrame({'combined': [raw_text]})
+                    if row_pieces:
+                        # 덤핑하지 않고 순차 처리가 가능한 형태의 데이터프레임 규격으로 빌드
+                        df = pd.DataFrame({'combined': row_pieces})
                         return df[['combined']]
                     else:
                         df = pd.read_excel(io.BytesIO(content))
@@ -40,7 +50,7 @@ class DataProcessor:
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
             
-            # 일반 파일 및 예외 처리를 위한 기존 원본 코드의 가공 흐름 원형 보존
+            # 원본의 가공 메커니즘 흐름 유지
             df = df.fillna('').astype(str)
             df['combined'] = df.apply(lambda row: ' '.join(row.values), axis=1)
             return df[['combined']]
@@ -48,7 +58,7 @@ class DataProcessor:
             return None
 
     def normalize(self, text):
-        # 원래 잘 되던 단어 정제 로직 및 불용어 세트 100% 동일 유지
+        # 기존 단어 정제 로직 및 불용어(noise_words) 세트 100% 원형 그대로 보존
         if not isinstance(text, str):
             text = str(text) if text is not None else ""
         
