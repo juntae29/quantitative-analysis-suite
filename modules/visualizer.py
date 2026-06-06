@@ -4,18 +4,17 @@ import platform
 import os
 import networkx as nx
 import seaborn as sns
+import math
 from scipy.cluster.hierarchy import dendrogram, linkage
 
 # 폰트 설정을 위한 로직을 별도 함수로 분리하여 가장 먼저 실행
 def set_korean_font():
     font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'malgun.ttf')
     
-    # 폰트 매니저가 폰트 파일을 확실히 인식하도록 등록
     if os.path.exists(font_path):
         fm.fontManager.addfont(font_path)
         plt.rcParams['font.family'] = 'Malgun Gothic'
     else:
-        # 폰트 파일이 없을 경우 시스템 환경에 따른 대체 폰트 설정
         if platform.system() == "Windows":
             plt.rcParams['font.family'] = 'Malgun Gothic'
         elif platform.system() == "Darwin":
@@ -23,7 +22,6 @@ def set_korean_font():
         else:
             plt.rcParams['font.family'] = 'sans-serif'
             
-    # 마이너스 기호 깨짐 방지
     plt.rcParams['axes.unicode_minus'] = False
 
 # 모듈 로드 시 즉시 실행
@@ -34,22 +32,31 @@ class Visualizer:
     def draw_network(matrix, n_words, ax):
         top_matrix = matrix.iloc[:n_words, :n_words]
         G = nx.from_pandas_adjacency(top_matrix)
-        node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
-        node_sizes = [max(node_freqs[n] * 20, 1000) for n in G.nodes()]
-        weights = [G[u][v]['weight'] * 0.1 for u, v in G.edges()]
-        pos = nx.spring_layout(G, k=0.8, seed=42)
-        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
-                               node_color='#E8EAF6', edgecolors='#FF5252', linewidths=0.5)
-        nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.5)
         
-        # 텍스트 렌더링 시 강제 폰트 설정 유지
-        font_props = {'family': plt.rcParams['font.family']}
+        # 빈도수 데이터 추출 (대각 행렬 요소)
+        node_freqs = {node: int(matrix.loc[node, node]) for node in G.nodes()}
+        
+        # 노드 크기 스케일링: 빈도수 로그 스케일 적용 (최대 크기 제한)
+        node_sizes = [max(math.log(node_freqs[n] + 1) * 800, 500) for n in G.nodes()]
+        
+        # 엣지 가중치 강화: 연계 횟수(weight)에 비례하여 굵기 변화
+        edges = G.edges(data=True)
+        weights = [data['weight'] * 0.5 for u, v, data in edges]
+        
+        pos = nx.spring_layout(G, k=0.5, seed=42)
+        
+        # 노드와 엣지 그리기
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_sizes, 
+                               node_color='#E8EAF6', edgecolors='#FF5252', linewidths=1.0)
+        nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#64B5F6', width=weights, alpha=0.6)
+        
+        # 라벨링: 단어와 빈도수를 결합하여 명확히 표출
+        font_props = {'family': plt.rcParams['font.family'], 'weight': 'bold'}
         for node, (x, y) in pos.items():
-            ax.text(x, y, str(node_freqs[node]), fontsize=9, color='#1A237E', 
-                    ha='center', va='center', fontweight='bold', fontdict=font_props)
-        for node, (x, y) in pos.items():
-            ax.text(x, y + 0.08, str(node), fontsize=9, color='black', 
-                    ha='center', va='bottom', fontweight='bold', fontdict=font_props)
+            label_text = f"{node}\n({node_freqs[node]})"
+            ax.text(x, y, label_text, fontsize=8, color='#1A237E', 
+                    ha='center', va='center', fontdict=font_props)
+            
         ax.set_title("Co-occurrence Network Graph", fontdict=font_props)
         ax.axis('off')
 
