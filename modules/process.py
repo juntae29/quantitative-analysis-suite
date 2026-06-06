@@ -2,7 +2,6 @@ import pandas as pd
 import pypdf
 import io
 import re
-from openpyxl import load_workbook # 안전한 엑셀 로딩을 위해 추가
 
 class DataProcessor:
     def load_file(self, file):
@@ -18,29 +17,16 @@ class DataProcessor:
                 df = pd.DataFrame({'combined': [text]})
                 return df[['combined']]
                 
-            # 2. Excel (XLSX, XLS) 파일 처리 (최신 파이썬 버전 호환성 완벽 우회)
+            # 2. Excel (XLSX, XLS) 파일 처리 (판다스 내부 엔진 우회 방식)
             elif file.name.lower().endswith(('.xlsx', '.xls')):
-                # BytesIO 호환성 에러를 피하기 위해 openpyxl로 수동 파싱 진행
-                wb = load_workbook(io.BytesIO(content), data_only=True)
-                ws = wb.active
-                
-                data = []
-                for row in ws.iter_rows(values_only=True):
-                    # 모든 셀이 비어있지 않은 행만 수집
-                    if any(cell is not None for cell in row):
-                        data.append([str(cell) if cell is not None else "" for cell in row])
-                
-                if not data:
-                    return None
-                    
-                # 데이터프레임 빌드
-                df = pd.DataFrame(data[1:], columns=data[0]) if len(data) > 1 else pd.DataFrame(data)
+                # 최신 파이썬 스트림 호환성을 위해 판다스 메서드에 엔진을 명시적으로 주입
+                df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
                 
             # 3. CSV 파일 처리
             else:
                 df = pd.read_csv(io.BytesIO(content), encoding='utf-8-sig')
             
-            # CSV 및 Excel 파일 공통 데이터 정제 및 병합
+            # 공통 데이터 정제 및 병합
             df = df.fillna('').astype(str)
             if not df.empty:
                 df['combined'] = df.apply(lambda row: ' '.join(row.values), axis=1)
